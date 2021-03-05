@@ -1,0 +1,50 @@
+<html>
+  <head>
+    <title>Calendar - Heads Up Mockup</title>
+    <link rel="stylesheet" type="text/css" href="index.css">
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css">
+  </head>
+  <body>
+    <div class='case'>
+      <div class='calendar'>
+        <div class='calendar-header'>
+          <div class='calendar-controls'>
+            <span id='date-today' class='today'>Today</span>
+            <span id='date-backward'><i class="fa fa-chevron-left"></i></span>
+            <span id='current-date'></span>
+            <span id='date-forward'><i class="fa fa-chevron-right"></i></span>
+          </div>
+        </div>
+        <div class='calendar-month' id='current-month'></div>
+        <div class='calendar-content'>
+          <div class='calendar-day-headers'>
+            <div class="calendar-row-header">Su</div>
+            <div class="calendar-row-header">Mo</div>
+            <div class="calendar-row-header">Tu</div>
+            <div class="calendar-row-header">We</div>
+            <div class="calendar-row-header">Th</div>
+            <div class="calendar-row-header">Fr</div>
+            <div class="calendar-row-header">Sa</div>
+          </div>
+          <div class='calendar-days' id='calendar-days'></div>
+        </div>
+      </div>
+      <div class='upcoming'>
+        <div class='upcoming-filter'>
+          <div class="card-2">
+            <div class="card-title">Employee</div>
+            <div class="card-content">
+              <select class="bootstrap" id='employee-filter'></select>
+            </div>
+          </div>
+        </div>
+        <div class='upcoming-items'>
+          <div class='upcoming-timeline' id='upcoming-timeline'></div>
+          <div class='upcoming-cards' id='upcoming-cards'></div>
+        </div>
+      </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
+    <script src="index.js"></script>
+  </body>
+</html>
