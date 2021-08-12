@@ -8,10 +8,7 @@
 /* Setup basic calendar */
 buildCalendar();
 
-/* Setup Events */
-window.onerror = (e) => {
-  document.body.insertAdjacentHTML("beforeend", `<b>${JSON.stringify(e)}</b>`);
-};
+/* Events */
 document.getElementById('date-today').onclick = () => {
   // Variables
   let currentDate = moment();
@@ -21,7 +18,7 @@ document.getElementById('date-today').onclick = () => {
 };
 document.getElementById('date-forward').onclick = () => {
   // Variables
-  let currentDateElement = document.getElementById('current-date');
+  const currentDateElement = document.getElementById('current-date');
   let currentDate = moment(currentDateElement.dataset.date, "YYYY-MM-DD", true);
   currentDate = (currentDate.isValid() ? currentDate : moment()).add(1, "day");
 
@@ -30,12 +27,30 @@ document.getElementById('date-forward').onclick = () => {
 };
 document.getElementById('date-backward').onclick = () => {
   // Variables
-  let currentDateElement = document.getElementById('current-date');
+  const currentDateElement = document.getElementById('current-date');
   let currentDate = moment(currentDateElement.dataset.date, "YYYY-MM-DD", true);
   currentDate = (currentDate.isValid() ? currentDate : moment()).add(-1, "day");
 
   // Build calendar
   buildCalendar(currentDate);
+};
+document.getElementById('employee-filter').onchange = (e) => {
+  // Variables
+  const value = parseInt(e.target.value);
+
+  // UI
+  document.querySelectorAll('#upcoming-cards .card-2').forEach((e) => {
+    // Checks
+    if (value === 0) {
+      e.style.display = 'block';
+      return false;
+    }
+    if (!e.dataset.employee || parseInt(e.dataset.employee) !== value) {
+      e.style.display = 'none';
+    } else {
+      e.style.display = 'block';
+    }
+  });
 };
 
 /**
@@ -55,7 +70,14 @@ function getDaysArray(year = 2021, month = 0) {
 
   // Loops
   while (date.getMonth() == monthIndex) {
-    result.push({"month_day": date.getDate(), "week_day": date.getDay(), "date_object": new Date(date)});
+    // Add date to array
+    result.push({
+      "month_day": date.getDate(),
+      "week_day": date.getDay(),
+      "date_object": new Date(date)
+    });
+
+    // Push date forward
     date.setDate(date.getDate() + 1);
   }
 
@@ -73,29 +95,29 @@ function getDaysArray(year = 2021, month = 0) {
 */
 function buildCalendar(specifiedDate = moment()) {
   // Variables
-  let fragment = document.createDocumentFragment();
-  let dateObject = getDaysArray(specifiedDate.isoWeekYear(), specifiedDate.month());
+  const fragment = document.createDocumentFragment();
+  const dateObject = getDaysArray(specifiedDate.isoWeekYear(), specifiedDate.month());
 
   // Loop
   (Object.values(dateObject) || []).forEach(function(date, index) {
     // Variables
-    let div = document.createElement('div');
-    let momentObject = moment(date.date_object);
+    const div = document.createElement('div');
+    const momentObject = moment(date.date_object);
 
     // Attributes
     div.classList.add('calendar-row-day');
     div.textContent = date.month_day;
-    div.onclick = function(e) {
-      console.log(date);
+    div.onclick = (e) => {
+      buildCalendar(momentObject);
     };
 
     // Checks
-    if (index == 0) {
+    if (index === 0) {
       div.style.gridColumn = date.week_day + 1;
     }
     if (momentObject.isoWeekYear() == specifiedDate.isoWeekYear() &&
           momentObject.month() == specifiedDate.month() &&
-              date.month_day == specifiedDate.date()) {
+            date.month_day == specifiedDate.date()) {
       div.classList.add('active');
     }
 
@@ -110,6 +132,9 @@ function buildCalendar(specifiedDate = moment()) {
   document.getElementById('current-month').innerText = specifiedDate.format("MMMM, YYYY");
   document.getElementById('calendar-days').innerHTML = '';
   document.getElementById('calendar-days').appendChild(fragment);
+
+  // Fetch Appointments
+  getAppointments();
 }
 
 /**
@@ -121,108 +146,67 @@ function buildCalendar(specifiedDate = moment()) {
  * @author Alec M. <https://amattu.com>
  * @date 2021-02-05T07:49:12-050
 */
-function getAppointments(date = moment()) {
-  // Checks
-  if (typeof(date) !== "string") { return false; }
-  if (!moment(date, "YYYY-MM-DD", true).isValid()) { date = moment().format("YYYY-MM-DD"); }
-
+function getAppointments() {
   // Variables
-  let request = new XMLHttpRequest();
-  let form = new FormData();
-  let response = "";
+  let times = [];
+  let appointments = data.data.Appointments.sort((a, b) => {
+    return moment(a.Time, "HH:mm:ss").unix() - moment(b.Time, "HH:mm:ss").unix();
+  });
+  let fragment = document.createDocumentFragment();
+  let fragment2 = document.createDocumentFragment();
+  let fragment3 = document.createDocumentFragment();
 
-  // Attributes
-  form.append("key", "");
-  form.append("function", "fetchAppointments");
-  form.append("detail", 1);
-  form.append("date", date);
-  request.open("GET", "http://localhost/api/v1/calendar.php?" + (new URLSearchParams(form)).toString(), true);
-  request.onreadystatechange = function() {
-    // Checks
-    if (request.readyState !== 4) { return false; }
-    if (request.status == 200) { response = JSON.parse(request.responseText); }
-    if (!response || !response.data || Object.keys(response.data).length <= 0) { return false; }
-
+  // Loops
+  for (let i = 0; i < appointments.length; i++) {
     // Variables
-    let providers = [];
-    let times = [];
-    let appointments = response.data;
-    let fragment = document.createDocumentFragment();
-    let fragment2 = document.createDocumentFragment();
-    let fragment3 = document.createDocumentFragment();
+    let appointment = appointments[i];
+    let div = document.createElement('div');
+    let time = moment(appointment.Time, "HH:mm:ss");
+    let hourFormatted = time.format("HH");
 
-    // Loops
-    for (let i = 0; i < Object.keys(appointments).length; i++) {
-      // Variables
-      let appointment = appointments[Object.keys(appointments)[i]];
-      let div = document.createElement('div');
-      let time = moment(appointment.AppTime, "HH:mm:ss");
-      let hourFormatted = time.format("HH");
-
-      // Checks
-      if (!providers.includes(appointment.AppProviderID)) { providers.push(appointment.AppProviderID); }
-      if (!times.includes(hourFormatted)) { times.push(hourFormatted); }
-
-      // Attributes
-      div.classList.add('card-2');
-      div.dataset.filterProvider = appointment.AppProviderID;
-      div.innerHTML = `<div class="card-title">${(appointment.FirstName.trim() + " " + appointment.LastName.trim()).trim()}</div><div class="card-content">${appointment.ModYear} ${appointment.Make.trim()} ${appointment.Model.trim()} <br> ${appointment.ServiceLabel.trim()}</div>`;
-
-      // Append
-      fragment.appendChild(div);
-    }
-    for (let i = 0; i < providers.length; i++) {
-      // Variables
-      let option = document.createElement('option');
-      let provider = providers[i];
-
-      // Attributes
-      option.value = provider;
-      option.innerText = `Employee ID #${provider}`;
-
-      // Append
-      fragment2.appendChild(option);
-    }
-    for (let i = 0; i < times.length; i++) {
-      // Variables
-      let div = document.createElement('div');
-      let time = times[i];
-      let timeM = moment(time, "HH");
-
-      // Attributes
-      div.classList.add('timeline-item');
-      div.innerHTML = `<div class="timeline-item-line"></div><div class="timeline-item-time">${timeM.format("ha")}</div>`;
-
-      // Append
-      fragment3.appendChild(div);
+    // Checks
+    if (!times.includes(hourFormatted)) {
+      times.push(hourFormatted);
     }
 
-    // Events
-    document.getElementById('employee-filter').onchange = function() {
-      // UI
-      document.querySelectorAll('#upcoming-cards .card-2').forEach(function(e) {
-        // Checks
-        if (parseInt(document.getElementById('employee-filter').value) == 0) {
-          e.style.display = 'block';
-          return false;
-        }
-        if (!e.dataset.filterProvider || parseInt(e.dataset.filterProvider) !== parseInt(document.getElementById('employee-filter').value)) {
-          e.style.display = 'none';
-        } else {
-          e.style.display = 'block';
-        }
-      });
-    };
+    // Attributes
+    div.classList.add('card-2');
+    div.dataset.employee = appointment.EmployeeID;
+    div.innerHTML = `<div class="card-title">${appointment.Name}</div><div class="card-content">${appointment.Comment}</div>`;
 
     // Append
-    document.getElementById('employee-filter').innerHTML = '<option value="0">All employees</option>';
-    document.getElementById('employee-filter').appendChild(fragment2);
-    document.getElementById('upcoming-cards').innerHTML = '';
-    document.getElementById('upcoming-cards').appendChild(fragment);
-    document.getElementById('upcoming-timeline').innerHTML = '';
-    document.getElementById('upcoming-timeline').appendChild(fragment3);
-  };
+    fragment.appendChild(div);
+  }
+  data.data.Employees.forEach((provider) => {
+    // Variables
+    let option = document.createElement('option');
 
-  // Send
-  request.send(form);
+    // Attributes
+    option.value = provider.ID;
+    option.innerText = provider.Name;
+
+    // Append
+    fragment2.appendChild(option);
+  });
+  for (let i = 0; i < times.length; i++) {
+    // Variables
+    let div = document.createElement('div');
+    let time = times[i];
+    let timeM = moment(time, "HH");
+
+    // Attributes
+    div.classList.add('timeline-item');
+    div.innerHTML = `<div class="timeline-item-line"></div><div class="timeline-item-time">${timeM.format("ha")}</div>`;
+
+    // Append
+    fragment3.appendChild(div);
+  }
+
+  // Append
+  document.getElementById('employee-filter').innerHTML = '<option value="0">All</option>';
+  document.getElementById('employee-filter').appendChild(fragment2);
+  document.getElementById('upcoming-cards').innerHTML = '';
+  document.getElementById('upcoming-cards').appendChild(fragment);
+  document.getElementById('upcoming-timeline').innerHTML = '';
+  document.getElementById('upcoming-timeline').appendChild(fragment3);
 }
