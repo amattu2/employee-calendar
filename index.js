@@ -8,28 +8,31 @@
 /* Setup basic calendar */
 buildCalendar();
 
-/* Setup Click Events */
-document.getElementById('date-today').onclick = function() {
+/* Setup Events */
+window.onerror = (e) => {
+  document.body.insertAdjacentHTML("beforeend", `<b>${JSON.stringify(e)}</b>`);
+};
+document.getElementById('date-today').onclick = () => {
   // Variables
   let currentDate = moment();
 
   // Build calendar
   buildCalendar(currentDate);
 };
-document.getElementById('date-forward').onclick = function() {
+document.getElementById('date-forward').onclick = () => {
   // Variables
   let currentDateElement = document.getElementById('current-date');
   let currentDate = moment(currentDateElement.dataset.date, "YYYY-MM-DD", true);
-  currentDate = (currentDate.isValid() ? currentDate : moment()).add(1, "month");
+  currentDate = (currentDate.isValid() ? currentDate : moment()).add(1, "day");
 
   // Build calendar
   buildCalendar(currentDate);
 };
-document.getElementById('date-backward').onclick = function() {
+document.getElementById('date-backward').onclick = () => {
   // Variables
   let currentDateElement = document.getElementById('current-date');
   let currentDate = moment(currentDateElement.dataset.date, "YYYY-MM-DD", true);
-  currentDate = (currentDate.isValid() ? currentDate : moment()).add(-1, "month");
+  currentDate = (currentDate.isValid() ? currentDate : moment()).add(-1, "day");
 
   // Build calendar
   buildCalendar(currentDate);
