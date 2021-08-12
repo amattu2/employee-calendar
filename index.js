@@ -71,10 +71,10 @@ function getDaysArray(year = 2021, month = 0) {
  * @author Alec M. <https://amattu.com>
  * @date 2021-02-27T09:16:16-050
 */
-function buildCalendar(date = moment()) {
+function buildCalendar(specifiedDate = moment()) {
   // Variables
   let fragment = document.createDocumentFragment();
-  let dateObject = getDaysArray(date.isoWeekYear(), date.month());
+  let dateObject = getDaysArray(specifiedDate.isoWeekYear(), specifiedDate.month());
 
   // Loop
   (Object.values(dateObject) || []).forEach(function(date, index) {
@@ -93,9 +93,9 @@ function buildCalendar(date = moment()) {
     if (index == 0) {
       div.style.gridColumn = date.week_day + 1;
     }
-    if (momentObject.isoWeekYear() == moment().isoWeekYear() &&
-          momentObject.month() == moment().month() &&
-              date.month_day == moment().date()) {
+    if (momentObject.isoWeekYear() == specifiedDate.isoWeekYear() &&
+          momentObject.month() == specifiedDate.month() &&
+              date.month_day == specifiedDate.date()) {
       div.classList.add('active');
     }
 
@@ -105,9 +105,9 @@ function buildCalendar(date = moment()) {
 
 
   // Append
-  document.getElementById('current-date').dataset.date = date.format("YYYY-MM-DD");
-  document.getElementById('current-date').innerText = date.format("MMM Do YYYY");
-  document.getElementById('current-month').innerText = date.format("MMMM, YYYY");
+  document.getElementById('current-date').dataset.date = specifiedDate.format("YYYY-MM-DD");
+  document.getElementById('current-date').innerText = specifiedDate.format("MMM Do, YYYY");
+  document.getElementById('current-month').innerText = specifiedDate.format("MMMM, YYYY");
   document.getElementById('calendar-days').innerHTML = '';
   document.getElementById('calendar-days').appendChild(fragment);
 }
